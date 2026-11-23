@@ -1,0 +1,123 @@
+{
+  "$schema": "https://flagd.dev/schema/v0/flags.json",
+  "flags": {
+    "adFailure": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "adHighCpu": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "adManualGc": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "cartFailure": {
+      "state": "ENABLED",
+      "variants": {
+        "off": 0,
+        "on": 1
+      },
+      "defaultVariant": "off"
+    },
+    "emailMemoryLeak": {
+      "state": "ENABLED",
+      "variants": {
+        "off": 0,
+        "on": 10
+      },
+      "defaultVariant": "off"
+    },
+    "emitRawPii": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false
+      },
+      "defaultVariant": "off"
+    },
+    "failedReadinessProbe": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "imageSlowLoad": {
+      "state": "ENABLED",
+      "variants": {
+        "off": 0,
+        "on": 5000
+      },
+      "defaultVariant": "off"
+    },
+    "intlShippingSlowdown": {
+      "state": "ENABLED",
+      "variants": {
+        "off": 0,
+        "on": 5
+      },
+      "defaultVariant": "off"
+    },
+    "loadGeneratorFloodHomepage": {
+      "state": "ENABLED",
+      "variants": {
+        "off": 0
+      },
+      "defaultVariant": "off"
+    },
+    "paymentFailure": {
+      "state": "ENABLED",
+      "variants": {
+        "off": 0,
+        "on": 1
+      },
+      "defaultVariant": "off"
+    },
+    "paymentUnreachable": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "productCatalogFailure": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "productCatalogLockContention": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    },
+    "recommendationCacheFailure": {
+      "state": "ENABLED",
+      "variants": {
+        "off": false,
+        "on": true
+      },
+      "defaultVariant": "off"
+    }
+  }
+}

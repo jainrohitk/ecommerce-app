@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+        tier: application
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: cart
+          image: ghcr.io/open-telemetry/demo:3.1.0-cart
+          ports:
+            - containerPort: 7070
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: CART_PORT
+              value: '7070'
+            - name: ASPNETCORE_URLS
+              value: http://*:7070
+            - name: DOTNET_GCHeapHardLimitPercent
+              # .NET reads this percentage as hexadecimal: 0x32 = 50%.
+              value: '32'
+            - name: OTEL_SERVICE_NAME
+              value: cart
+            - name: Logging__LogLevel__cart.cartstore.ValkeyCartStore
+              value: Warning
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lab-secrets
+                  key: REDIS_PASSWORD
+            - name: VALKEY_ADDR
+              value: redis:6379,password=$(REDIS_PASSWORD),abortConnect=false,connectTimeout=2000,syncTimeout=2000
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            tcpSocket:
+              port: 7070
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            grpc:
+              port: 7070
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 7070
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart
+spec:
+  selector:
+    app: cart
+  ports:
+    - name: grpc
+      port: 7070
+      targetPort: 7070

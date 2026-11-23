@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-catalog
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-catalog
+  template:
+    metadata:
+      labels:
+        app: product-catalog
+        tier: application
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: product-catalog
+          image: ghcr.io/open-telemetry/demo:3.1.0-product-catalog
+          ports:
+            - containerPort: 3550
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: PRODUCT_CATALOG_PORT
+              value: '3550'
+            - name: GOMEMLIMIT
+              value: 64MiB
+            - name: OTEL_SERVICE_NAME
+              value: product-catalog
+            - name: OTEL_CONFIG_FILE
+              value: /etc/otel/sdk.yaml
+            - name: OTEL_SEMCONV_STABILITY_OPT_IN
+              value: database
+            - name: DB_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: lab-secrets
+                  key: DB_CONNECTION_STRING
+          volumeMounts:
+            - name: sdk
+              mountPath: /etc/otel
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 25m
+              memory: 24Mi
+            limits:
+              cpu: 500m
+              memory: 96Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            tcpSocket:
+              port: 3550
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            grpc:
+              port: 3550
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 3550
+            periodSeconds: 20
+      volumes:
+        - name: sdk
+          configMap:
+            name: otel-sdk
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-catalog
+spec:
+  selector:
+    app: product-catalog
+  ports:
+    - name: grpc
+      port: 3550
+      targetPort: 3550

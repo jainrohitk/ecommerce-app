@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: traffic-
+  namespace: ecomm-lab
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 900
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: load-generator
+        tier: traffic
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: load-generator
+          image: ghcr.io/open-telemetry/demo:3.1.0-load-generator
+          args:
+            - --locustfile=/etc/locust/shopping.py
+            - --headless
+            - --users=10
+            - --spawn-rate=1
+            - --run-time=600s
+            - --only-summary
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: LOCUST_HOST
+              value: http://frontend-proxy:8080
+            - name: LOCUST_BROWSER_TRAFFIC_ENABLED
+              value: 'false'
+            - name: LOCUST_BROWSER_USER_WEIGHT
+              value: '0'
+            - name: LOCUST_HTTP_USER_WEIGHT
+              value: '1'
+            - name: OTEL_SERVICE_NAME
+              value: load-generator
+            - name: PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION
+              value: python
+          volumeMounts:
+            - name: tasks
+              mountPath: /etc/locust
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 192Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+      volumes:
+        - name: tasks
+          configMap:
+            name: load-generator-tasks

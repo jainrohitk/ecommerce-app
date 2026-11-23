@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ad
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ad
+  template:
+    metadata:
+      labels:
+        app: ad
+        tier: application
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ad
+          image: ghcr.io/open-telemetry/demo:3.1.0-ad
+          ports:
+            - containerPort: 9555
+          envFrom:
+            - configMapRef:
+                name: app-env
+          env:
+            - name: AD_PORT
+              value: '9555'
+            - name: JDK_JAVA_OPTIONS
+              value: -Xms32m -Xmx96m -XX:ActiveProcessorCount=1
+            - name: AD_PROMETHEUS_PORT
+              value: '9465'
+            - name: OTEL_SERVICE_NAME
+              value: ad
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector:4318
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: http/protobuf
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          startupProbe:
+            tcpSocket:
+              port: 9555
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            tcpSocket:
+              port: 9555
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 9555
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ad
+spec:
+  selector:
+    app: ad
+  ports:
+    - name: grpc
+      port: 9555
+      targetPort: 9555

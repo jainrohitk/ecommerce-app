@@ -1,0 +1,67 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: ecomm-lab
+resources:
+  - namespace.yaml
+  - common/network-policy.yaml
+  - frontend/manifest.yaml
+  - frontend-proxy/manifest.yaml
+  - product-catalog/manifest.yaml
+  - cart/manifest.yaml
+  - checkout/manifest.yaml
+  - payment/manifest.yaml
+  - email/manifest.yaml
+  - currency/manifest.yaml
+  - ad/manifest.yaml
+  - recommendation/manifest.yaml
+  - shipping/manifest.yaml
+  - quote/manifest.yaml
+  - image-provider/manifest.yaml
+  - flagd/manifest.yaml
+  - redis/manifest.yaml
+  - postgres/manifest.yaml
+  - otel-collector/manifest.yaml
+  - tempo/manifest.yaml
+  - prometheus/manifest.yaml
+  - grafana/manifest.yaml
+configMapGenerator:
+  - name: app-env
+    envs:
+      - common/app.env
+  - name: otel-sdk
+    files:
+      - sdk.yaml=common/sdk.yaml
+  - name: postgres-bootstrap
+    files:
+      - init.sh=postgres/init.sh
+      - schema.sql=postgres/schema.sql
+  - name: flagd-config
+    files:
+      - flags.json=flagd/flags.json
+  - name: envoy-config
+    files:
+      - envoy.yaml=frontend-proxy/envoy.yaml
+  - name: collector-config
+    files:
+      - config.yaml=otel-collector/config.yaml
+  - name: tempo-config
+    files:
+      - config.yaml=tempo/config.yaml
+  - name: prometheus-config
+    files:
+      - prometheus.yaml=prometheus/prometheus.yaml
+      - alerts.yaml=prometheus/alerts.yaml
+  - name: grafana-datasources
+    files:
+      - datasources.yaml=grafana/datasources.yaml
+  - name: grafana-provider
+    files:
+      - provider.yaml=grafana/provider.yaml
+  - name: grafana-dashboard
+    files:
+      - overview.json=grafana/overview.json
+  - name: load-generator-tasks
+    files:
+      - shopping.py=load-generator/shopping.py
+    options:
+      disableNameSuffixHash: true
